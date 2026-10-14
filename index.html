@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Solow Growth Model Simulator</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+  :root{
+    --bg:#f3f5fa; --card:#ffffff; --ink:#1c2333; --muted:#5b6478;
+    --brand:#1f3a8a; --brand2:#3b82f6; --line:#e2e6ef;
+    --y:#2563eb; --i:#16a34a; --d:#dc2626; --ss:#f59e0b;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:"Sarabun","Noto Sans Thai",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    line-height:1.55}
+  header{background:linear-gradient(135deg,var(--brand),var(--brand2));color:#fff;
+    padding:22px 16px;text-align:center;box-shadow:0 2px 10px rgba(0,0,0,.15)}
+  header .id{font-size:clamp(1rem,2.6vw,1.45rem);font-weight:700;letter-spacing:.2px}
+  header .title{margin-top:6px;font-size:clamp(.9rem,2vw,1.05rem);opacity:.92}
+  main{max-width:1100px;margin:0 auto;padding:18px 14px 40px;display:grid;gap:16px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;
+    box-shadow:0 1px 4px rgba(20,30,60,.06)}
+  h2{margin:0 0 10px;font-size:1.1rem;color:var(--brand)}
+  .eq{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:8px;margin:10px 0}
+  .eq code{display:block;background:#eef2ff;border-radius:8px;padding:8px 10px;font-size:.92rem}
+  ul{margin:6px 0 0;padding-left:20px}
+  li{margin:4px 0}
+  .grid2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.6fr);gap:16px}
+  @media (max-width:860px){.grid2{grid-template-columns:1fr}}
+  .ctrl{margin-bottom:16px}
+  .ctrl label{display:flex;justify-content:space-between;align-items:center;font-weight:600;margin-bottom:6px}
+  .row{display:flex;gap:10px;align-items:center}
+  input[type=range]{flex:1;accent-color:var(--brand2)}
+  input[type=number]{width:90px;padding:6px 8px;border:1px solid var(--line);border-radius:8px;font-size:.95rem}
+  .chartwrap{position:relative;height:420px}
+  @media (max-width:600px){.chartwrap{height:340px}}
+  .results{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}
+  .res{border-radius:12px;padding:14px;text-align:center;color:#fff}
+  .res .n{font-size:.9rem;opacity:.95}
+  .res .v{font-size:1.6rem;font-weight:800;margin-top:2px;word-break:break-all}
+  .r-k{background:#7c3aed}.r-y{background:var(--y)}.r-c{background:#0d9488}
+  .small{color:var(--muted);font-size:.88rem;margin-top:10px}
+  button{cursor:pointer;border:0;border-radius:10px;padding:12px 18px;font-size:1rem;font-weight:700;
+    font-family:inherit;transition:transform .05s,opacity .2s}
+  button:active{transform:scale(.98)}
+  .btn-ai{background:linear-gradient(135deg,#f59e0b,#ef4444);color:#fff}
+  .btn-reset{background:#e5e7eb;color:var(--ink)}
+  .btns{display:flex;gap:10px;flex-wrap:wrap}
+  .aibox{margin-top:14px;display:none;background:#fff7ed;border:1px solid #fed7aa;border-radius:12px;padding:14px}
+  .aibox.show{display:block}
+  .aibox .big{font-size:1.5rem;font-weight:800;color:#c2410c}
+  .aibox table{width:100%;border-collapse:collapse;margin-top:8px}
+  .aibox td{padding:5px 4px;border-bottom:1px dashed #fdba74}
+  .aibox td:last-child{text-align:right;font-weight:700}
+  .err{color:#b91c1c;font-weight:600}
+  footer{text-align:center;color:var(--muted);font-size:.85rem;padding-bottom:24px}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="id">ชื่อ: สถาพร สมหมั่น (Sathaporn Somman) | รหัสนักศึกษา: 671610405</div>
+  <div class="title">Solow Growth Model Simulator</div>
+</header>
+
+<main>
+
+  <!-- Explanation -->
+  <section class="card">
+    <h2>What does Y = A·√K mean?</h2>
+    <p>
+      Output (<b>Y</b>) depends on the capital stock (<b>K</b>) and the technology level (<b>A</b>).
+      The square root means <b>diminishing returns to capital</b>: each extra unit of capital adds
+      less additional output than the one before. A higher <b>A</b> shifts the whole production curve upward.
+    </p>
+    <div class="eq">
+      <code>Y = A·√K</code>
+      <code>I = s·Y</code>
+      <code>D = δ·K</code>
+      <code>ΔK = s·Y − δ·K</code>
+      <code>K* = (s·A/δ)²</code>
+      <code>Y* = A·√K*,&nbsp; C* = (1−s)·Y*</code>
+    </div>
+    <ul>
+      <li><b>Saving rate (s) ↑</b> – more output is invested, the investment curve rotates up, and the steady-state capital K* rises.</li>
+      <li><b>Depreciation rate (δ) ↑</b> – capital wears out faster, the depreciation line gets steeper, and K* falls.</li>
+      <li><b>Technology (A) ↑</b> – each unit of capital produces more, so both Y and I shift upward and K*, Y* rise
+        (since Y* = s·A²/δ, output grows with the <i>square</i> of A).</li>
+      <li>Capital grows while I &gt; D (ΔK &gt; 0), shrinks while I &lt; D, and stops at the steady state where I = D.</li>
+    </ul>
+  </section>
+
+  <!-- Controls + Chart -->
+  <section class="grid2">
+    <div class="card">
+      <h2>Parameters</h2>
+
+      <div class="ctrl">
+        <label for="s_num"><span>Saving rate (s)</span></label>
+        <div class="row">
+          <input type="range" id="s_rng" min="0.01" max="0.99" step="0.01" value="0.30">
+          <input type="number" id="s_num" min="0.01" max="0.99" step="0.01" value="0.30">
+        </div>
+      </div>
+
+      <div class="ctrl">
+        <label for="d_num"><span>Depreciation rate (δ)</span></label>
+        <div class="row">
+          <input type="range" id="d_rng" min="0.005" max="0.20" step="0.005" value="0.02">
+          <input type="number" id="d_num" min="0.005" max="0.20" step="0.005" value="0.02">
+        </div>
+      </div>
+
+      <div class="ctrl">
+        <label for="a_num"><span>Technology level (A)</span></label>
+        <div class="row">
+          <input type="range" id="a_rng" min="0.5" max="10" step="0.1" value="2.6">
+          <input type="number" id="a_num" min="0.5" max="100" step="0.1" value="2.6">
+        </div>
+      </div>
+
+      <div id="msg" class="small"></div>
+
+      <h2 style="margin-top:18px">Digital Economy Simulation</h2>
+      <div class="btns">
+        <button class="btn-ai" id="aiBtn">🤖 Thailand adopts AI (A +20%)</button>
+        <button class="btn-reset" id="resetBtn">Reset defaults</button>
+      </div>
+
+      <div class="aibox" id="aiBox">
+        <div>Change in steady-state output Y*</div>
+        <div class="big" id="aiPct">—</div>
+        <table>
+          <tr><td>A (before → after)</td><td id="aiA">—</td></tr>
+          <tr><td>Y* before</td><td id="aiY0">—</td></tr>
+          <tr><td>Y* after</td><td id="aiY1">—</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Graph: Output, Investment &amp; Depreciation vs Capital (K)</h2>
+      <div class="chartwrap"><canvas id="chart"></canvas></div>
+      <div id="chartErr" class="err"></div>
+    </div>
+  </section>
+
+  <!-- Results -->
+  <section class="card">
+    <h2>Steady-State Results</h2>
+    <div class="results">
+      <div class="res r-k"><div class="n">Capital K*</div><div class="v" id="resK">—</div></div>
+      <div class="res r-y"><div class="n">Output Y*</div><div class="v" id="resY">—</div></div>
+      <div class="res r-c"><div class="n">Consumption C*</div><div class="v" id="resC">—</div></div>
+    </div>
+    <div class="small" id="resExtra"></div>
+  </section>
+
+</main>
+
+<footer>Solow Growth Model · Y = A·√K · built for economics coursework</footer>
+
+<script>
+(function () {
+  "use strict";
+
+  var DEFAULTS = { s: 0.30, d: 0.02, A: 2.6 };
+  var state = { s: DEFAULTS.s, d: DEFAULTS.d, A: DEFAULTS.A };
+
+  var LIMITS = {
+    s: { min: 0.01,  max: 0.99 },
+    d: { min: 0.005, max: 0.20 },
+    A: { min: 0.5,   max: 100 }
+  };
+
+  var $ = function (id) { return document.getElementById(id); };
+  var f3 = function (x) { return Number(x).toFixed(3); };
+
+  // ---- Core model ----
+  function steady(s, d, A) {
+    var K = Math.pow((s * A) / d, 2);
+    var Y = A * Math.sqrt(K);
+    return { K: K, Y: Y, C: (1 - s) * Y, I: s * Y };
+  }
+
+  // ---- Chart ----
+  var chart = null;
+  function buildChart() {
+    if (typeof Chart === "undefined") {
+      $("chartErr").textContent =
+        "Chart.js could not be loaded (check your internet connection). Results are still calculated.";
+      return;
+    }
+    var ctx = $("chart").getContext("2d");
+    chart = new Chart(ctx, {
+      type: "line",
+      data: {
+        datasets: [
+          { label: "Output  Y = A·√K", data: [], borderColor: "#2563eb", backgroundColor: "#2563eb",
+            borderWidth: 2.5, pointRadius: 0, tension: 0 },
+          { label: "Investment  I = s·Y", data: [], borderColor: "#16a34a", backgroundColor: "#16a34a",
+            borderWidth: 2.5, pointRadius: 0, tension: 0 },
+          { label: "Depreciation  D = δ·K", data: [], borderColor: "#dc2626", backgroundColor: "#dc2626",
+            borderWidth: 2.5, pointRadius: 0, tension: 0 },
+          { label: "K*", data: [], borderColor: "#f59e0b", borderDash: [6, 5], borderWidth: 1.5,
+            pointRadius: 0, showLine: true },
+          { label: "Steady state (K*, I* = D*)", data: [], showLine: false,
+            backgroundColor: "#f59e0b", borderColor: "#111827", borderWidth: 2,
+            pointRadius: 8, pointHoverRadius: 10 }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: false,
+        parsing: false,
+        interaction: { mode: "nearest", intersect: false },
+        scales: {
+          x: { type: "linear", min: 0, title: { display: true, text: "Capital (K)" } },
+          y: { type: "linear", min: 0, title: { display: true, text: "Output / Investment / Depreciation" } }
+        },
+        plugins: {
+          legend: {
+            labels: {
+              filter: function (item) { return item.text !== "K*"; },
+              usePointStyle: true
+            }
+          },
+          tooltip: {
+            callbacks: {
+              label: function (c) {
+                return c.dataset.label + ": (" + c.parsed.x.toFixed(1) + ", " + c.parsed.y.toFixed(3) + ")";
+              }
+            }
+          }
+        }
+      }
+    });
+  }
+
+  function updateChart(res) {
+    if (!chart) return;
+    var s = state.s, d = state.d, A = state.A;
+    var Kmax = res.K * 1.6;
+    var N = 160, Ys = [], Is = [], Ds = [];
+    for (var n = 0; n <= N; n++) {
+      var k = (Kmax * n) / N;
+      var y = A * Math.sqrt(k);
+      Ys.push({ x: k, y: y });
+      Is.push({ x: k, y: s * y });
+      Ds.push({ x: k, y: d * k });
+    }
+    chart.data.datasets[0].data = Ys;
+    chart.data.datasets[1].data = Is;
+    chart.data.datasets[2].data = Ds;
+    chart.data.datasets[3].data = [{ x: res.K, y: 0 }, { x: res.K, y: res.Y }];
+    chart.data.datasets[4].data = [{ x: res.K, y: res.I }];
+    chart.options.scales.x.max = Kmax;
+    chart.options.scales.y.max = Math.max(Ys[N].y, Ds[N].y) * 1.05;
+    chart.update("none");
+  }
+
+  // ---- Render ----
+  function render() {
+    var res = steady(state.s, state.d, state.A);
+    if (!isFinite(res.K) || !isFinite(res.Y)) {
+      $("msg").innerHTML = '<span class="err">Invalid parameters.</span>';
+      return res;
+    }
+    $("msg").textContent = "";
+    $("resK").textContent = f3(res.K);
+    $("resY").textContent = f3(res.Y);
+    $("resC").textContent = f3(res.C);
+    $("resExtra").textContent =
+      "At the steady state, investment = depreciation = " + f3(res.I) +
+      " (so ΔK = 0). Saving s = " + state.s + ", δ = " + state.d + ", A = " + state.A + ".";
+    updateChart(res);
+    return res;
+  }
+
+  // ---- Input binding ----
+  function clamp(v, lim) { return Math.min(lim.max, Math.max(lim.min, v)); }
+
+  function setValue(key, v, fixed) {
+    state[key] = v;
+    var id = { s: "s", d: "d", A: "a" }[key];
+    $(id + "_rng").value = v;
+    $(id + "_num").value = Number(v.toFixed(fixed));
+  }
+
+  function bind(key, id, fixed) {
+    var rng = $(id + "_rng"), num = $(id + "_num");
+    rng.addEventListener("input", function () {
+      var v = parseFloat(rng.value);
+      if (isNaN(v)) return;
+      state[key] = v;
+      num.value = Number(v.toFixed(fixed));
+      render();
+    });
+    num.addEventListener("input", function () {
+      var v = parseFloat(num.value);
+      if (isNaN(v)) return;
+      v = clamp(v, LIMITS[key]);
+      state[key] = v;
+      rng.value = v;
+      render();
+    });
+    num.addEventListener("change", function () {
+      var v = parseFloat(num.value);
+      if (isNaN(v)) v = state[key];
+      setValue(key, clamp(v, LIMITS[key]), fixed);
+      render();
+    });
+  }
+
+  bind("s", "s", 2);
+  bind("d", "d", 3);
+  bind("A", "a", 3);
+
+  // ---- AI simulation ----
+  $("aiBtn").addEventListener("click", function () {
+    var before = steady(state.s, state.d, state.A);
+    var A0 = state.A;
+    var A1 = Math.min(LIMITS.A.max, A0 * 1.2);
+    setValue("A", A1, 4);
+    var after = render();
+    var pct = ((after.Y - before.Y) / before.Y) * 100;
+    $("aiA").textContent = f3(A0) + " → " + f3(A1);
+    $("aiY0").textContent = f3(before.Y);
+    $("aiY1").textContent = f3(after.Y);
+    $("aiPct").textContent = (pct >= 0 ? "+" : "") + f3(pct) + " %";
+    $("aiBox").classList.add("show");
+  });
+
+  $("resetBtn").addEventListener("click", function () {
+    setValue("s", DEFAULTS.s, 2);
+    setValue("d", DEFAULTS.d, 3);
+    setValue("A", DEFAULTS.A, 3);
+    $("aiBox").classList.remove("show");
+    render();
+  });
+
+  // ---- Init ----
+  buildChart();
+  render();
+})();
+</script>
+</body>
+</html>
